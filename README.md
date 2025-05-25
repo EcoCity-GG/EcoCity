@@ -1,7 +1,8 @@
 # 🌱 EcoCity - Conectando Sustentabilidade e Comunidade
 
 <div align="center">
-      <img src="https://github.com/user-attachments/assets/d6bddbc1-61e8-462a-aa79-e504b0d1efaa" alt="EcoCity">
+      <img src="https://github.com/user-attachments/assets/aefe9cc9-ed58-4454-8ef8-00004a56831e
+">
 </div>
 
 **EcoCity** é uma plataforma ecológica inovadora que visa promover a conscientização ambiental e facilitar ações sustentáveis em comunidades urbanas. Desenvolvido como iniciativa privada e aprimorado no ambiente educacional do **SENAI**, o projeto combina tecnologia e ecologia para criar um futuro mais verde.
