@@ -1,33 +1,40 @@
-
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EcoCity - Mapa de Consciência Ambiental</title>
-    <meta name="description" content="Promovendo consciência ambiental e práticas sustentáveis através de um mapa ecológico interativo e engajamento comunitário." />
-    <meta name="author" content="EcoCity" />
+<html lang="pt-BR"> <!-- Alterado para português já que o projeto é brasileiro -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoCity - Mapa de Consciência Ambiental</title>
+  <meta name="description" content="Promovendo consciência ambiental e práticas sustentáveis através de um mapa ecológico interativo e engajamento comunitário." />
+  <meta name="author" content="EcoCity" />
 
-    <meta property="og:title" content="EcoCity - Mapa de Consciência Ambiental" />
-    <meta property="og:description" content="Explore pontos de coleta ecológicos, centros de reciclagem e iniciativas de sustentabilidade em sua comunidade." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://i.ibb.co/TxgVmPP9/LOGO-NAVEGADOR.png/favicon.png" />
+  <!-- Open Graph / Facebook -->
+  <meta property="og:title" content="EcoCity - Mapa de Consciência Ambiental" />
+  <meta property="og:description" content="Explore pontos de coleta ecológicos, centros de reciclagem e iniciativas de sustentabilidade em sua comunidade." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://i.ibb.co/TxgVmPP/LOGO-NAVEGADOR.png" /> <!-- Corrigido o caminho da imagem -->
+  <meta property="og:url" content="https://ecocity.com.br" /> <!-- Adicionado URL do site -->
 
-    <meta name="twitter:card" content="https://i.ibb.co/TxgVmPP9/LOGO-NAVEGADOR.png" />
-    <meta name="twitter:site" content="@EcoCity" />
-    <meta name="twitter:image" content="https://i.ibb.co/TxgVmPP9/LOGO-NAVEGADOR.png/favicon.png" />
-    
-    <!-- Update favicon to use the new logo -->
-    <link rel="icon" href="https://i.ibb.co/TxgVmPP9/LOGO-NAVEGADOR.png/favicon.png" type="image/png">
-    
-    <!-- Include Leaflet CSS and JS directly -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
-          crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
-          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
-          crossorigin=""></script>
-  </head>
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" /> <!-- Corrigido o tipo de card -->
+  <meta name="twitter:site" content="@EcoCity" />
+  <meta name="twitter:creator" content="@EcoCity" />
+  <meta name="twitter:title" content="EcoCity - Mapa de Consciência Ambiental" />
+  <meta name="twitter:description" content="Explore pontos de coleta ecológicos, centros de reciclagem e iniciativas de sustentabilidade em sua comunidade." />
+  <meta name="twitter:image" content="https://i.ibb.co/TxgVmPP/LOGO-NAVEGADOR.png" /> <!-- Corrigido o caminho da imagem -->
+  
+  <!-- Favicon -->
+  <link rel="icon" href="https://i.ibb.co/TxgVmPP/LOGO-NAVEGADOR.png" type="image/png"> <!-- Corrigido o caminho -->
+  
+  <!-- Inclua tamanhos adicionais para melhor compatibilidade -->
+  <link rel="icon" type="image/png" sizes="32x32" href="https://i.ibb.co/TxgVmPP/LOGO-NAVEGADOR-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://i.ibb.co/TxgVmPP/LOGO-NAVEGADOR-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/TxgVmPP/LOGO-NAVEGADOR-180x180.png">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+        crossorigin=""/>
+</head>
 
   <body>
     <div id="root"></div>
