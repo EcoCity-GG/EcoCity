@@ -1,0 +1,109 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 80 30% 98%;
+    --foreground: 142 36% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 142 36% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 142 36% 15%;
+
+    --primary: 142 30% 40%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 195 40% 60%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 80 5% 96%;
+    --muted-foreground: 142 20% 40%;
+
+    --accent: 50 40% 80%;
+    --accent-foreground: 142 36% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 142 10% 90%;
+    --input: 142 10% 90%;
+    --ring: 142 30% 40%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 142 36% 8%;
+    --foreground: 0 0% 98%;
+
+    --card: 142 36% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 142 36% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 142 60% 50%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 195 40% 30%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 142 20% 15%;
+    --muted-foreground: 142 10% 70%;
+
+    --accent: 50 40% 40%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 142 20% 20%;
+    --input: 142 20% 20%;
+    --ring: 142 60% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  
+  .map-marker-recycling {
+    @apply bg-eco-green text-white rounded-full w-8 h-8 flex items-center justify-center shadow-md border-2 border-white;
+  }
+  
+  .map-marker-tree-planting {
+    @apply bg-eco-brown text-white rounded-full w-8 h-8 flex items-center justify-center shadow-md border-2 border-white;
+  }
+  
+  .map-marker-clean-up {
+    @apply bg-eco-blue text-white rounded-full w-8 h-8 flex items-center justify-center shadow-md border-2 border-white;
+  }
+  
+  .eco-card {
+    @apply bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-md p-6 border border-eco-green-light/20 dark:border-eco-green-dark/20;
+  }
+  
+  .eco-button {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 
+    transition-all shadow-sm hover:shadow-md focus:ring-2 focus:ring-primary/50 focus:outline-none;
+  }
+  
+  .eco-button-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-md px-4 py-2 
+    transition-all shadow-sm hover:shadow-md focus:ring-2 focus:ring-secondary/50 focus:outline-none;
+  }
+  
+  .eco-button-outline {
+    @apply border border-primary text-primary hover:bg-primary/10 rounded-md px-4 py-2 
+    transition-all shadow-sm hover:shadow-md focus:ring-2 focus:ring-primary/50 focus:outline-none;
+  }
+}
