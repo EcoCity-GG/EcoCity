@@ -32,12 +32,11 @@
   - Sugestões para atividades ecológicas faltantes
 
 ## 🚀 Tecnologias Utilizadas
-- Frontend: `HTML5`, `CSS3`, `JavaScript`, `Leaflet.js` (mapas)
-- Backend: `Node.js`, `Express`, `MongoDB`
-- Hospedagem Ecológica: Parceiro com **energia renovável**
+- Frontend: `HTML5`, `CSS3`, `JavaScript`, `Leaflet.js`. `TypeScript`
+- Backend: `Node.js`, `FireStore`
 
 ## 🌟 Como Contribuir
-1. **Relate Problemas**: Encontrou um erro? Abra uma [issue](https://github.com/seu-usuario/ecocity/issues)
+1. **Relate Problemas**: Encontrou um erro? Abra uma [issue](https://github.com/EcoCity-GG/ecocity/issues)
 2. **Sugira Melhorias**: Propostas são bem-vindas via Pull Requests
 3. **Divulgue**: Compartilhe em redes sociais com #EcoCityInitiative
 
