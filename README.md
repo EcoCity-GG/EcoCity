@@ -39,14 +39,3 @@
 1. **Relate Problemas**: Encontrou um erro? Abra uma [issue](https://github.com/EcoCity-GG/ecocity/issues)
 2. **Sugira Melhorias**: Propostas são bem-vindas via Pull Requests
 3. **Divulgue**: Compartilhe em redes sociais com #EcoCityInitiative
-
-## 📌 Como Usar
-```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/ecocity.git
-
-# Instale as dependências
-npm install
-
-# Inicie o servidor de desenvolvimento
-npm start
