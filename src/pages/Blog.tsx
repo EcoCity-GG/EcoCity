@@ -1,5 +1,6 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, User, Tag, ArrowRight } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Calendar, User, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ArtigoProps {
@@ -120,6 +121,38 @@ const ArtigoBlog = ({ artigo }: { artigo: ArtigoProps }) => {
 
 const Blog = () => {
   const { t } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [currentCategory, setCurrentCategory] = useState<string>('todos');
+  const [filteredArticles, setFilteredArticles] = useState<ArtigoProps[]>(artigos);
+  
+  // Fix the filter functionality by properly handling searchParams
+  useEffect(() => {
+    const category = searchParams.get('categoria');
+    if (category) {
+      setCurrentCategory(category);
+      if (category !== 'todos') {
+        setFilteredArticles(artigos.filter(artigo => 
+          artigo.categoria.toLowerCase() === category.toLowerCase()
+        ));
+      } else {
+        setFilteredArticles(artigos);
+      }
+    } else {
+      setCurrentCategory('todos');
+      setFilteredArticles(artigos);
+    }
+  }, [searchParams]);
+  
+  const handleCategoryChange = (category: string) => {
+    if (category === 'todos') {
+      setSearchParams({});
+    } else {
+      setSearchParams({ categoria: category });
+    }
+  };
+  
+  // Get unique categories from articles for dynamic filtering
+  const uniqueCategories = Array.from(new Set(artigos.map(artigo => artigo.categoria)));
   
   return (
     <div className="min-h-screen flex flex-col pt-20">
@@ -138,30 +171,37 @@ const Blog = () => {
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-eco-green-dark">Artigos em Destaque</h2>
-            <div className="flex gap-2">
-              <Link 
-                to="/blog" 
-                className="px-4 py-2 rounded-md bg-eco-green-light/20 text-eco-green-dark font-medium text-sm hover:bg-eco-green-light/30 transition-colors"
+            <div className="flex flex-wrap gap-2">
+              <button 
+                onClick={() => handleCategoryChange('todos')}
+                className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                  currentCategory === 'todos' 
+                    ? 'bg-eco-green-light/20 text-eco-green-dark font-medium' 
+                    : 'text-muted-foreground hover:bg-eco-sand/30'
+                }`}
               >
                 Todos
-              </Link>
-              <Link 
-                to="/blog?categoria=reciclagem" 
-                className="px-4 py-2 rounded-md text-muted-foreground text-sm hover:bg-eco-sand/30 transition-colors"
-              >
-                Reciclagem
-              </Link>
-              <Link 
-                to="/blog?categoria=reflorestamento" 
-                className="px-4 py-2 rounded-md text-muted-foreground text-sm hover:bg-eco-sand/30 transition-colors"
-              >
-                Reflorestamento
-              </Link>
+              </button>
+              
+              {/* Dynamic category buttons based on available categories */}
+              {uniqueCategories.map(category => (
+                <button 
+                  key={category}
+                  onClick={() => handleCategoryChange(category)}
+                  className={`px-4 py-2 rounded-md text-sm transition-colors ${
+                    currentCategory === category
+                      ? 'bg-eco-green-light/20 text-eco-green-dark font-medium' 
+                      : 'text-muted-foreground hover:bg-eco-sand/30'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
             </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {artigos.slice(0, 3).map((artigo) => (
+            {filteredArticles.slice(0, 3).map((artigo) => (
               <ArtigoBlog key={artigo.id} artigo={artigo} />
             ))}
           </div>
@@ -170,7 +210,7 @@ const Blog = () => {
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-eco-green-dark mb-6">Artigos Recentes</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {artigos.slice(3).map((artigo) => (
+            {filteredArticles.slice(3).map((artigo) => (
               <ArtigoBlog key={artigo.id} artigo={artigo} />
             ))}
           </div>

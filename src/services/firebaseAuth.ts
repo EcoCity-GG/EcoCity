@@ -1,4 +1,3 @@
-
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
@@ -203,14 +202,33 @@ export const firebaseAuth = {
     }
   },
   
-  // Update user profile information
+  // Update user profile information - FIXED VERSION
   updateUserProfile: async (uid: string, data: { bio?: string, photoURL?: string, name?: string }): Promise<void> => {
     try {
+      console.log(`firebaseAuth.updateUserProfile - Updating user ${uid} with data:`, data);
+      
+      // Filter out undefined values to prevent Firebase errors
+      const cleanData: { bio?: string, photoURL?: string, name?: string } = {};
+      
+      if (data.name !== undefined && data.name.trim() !== '') {
+        cleanData.name = data.name.trim();
+      }
+      
+      if (data.bio !== undefined) {
+        cleanData.bio = data.bio;
+      }
+      
+      if (data.photoURL !== undefined && data.photoURL.trim() !== '') {
+        cleanData.photoURL = data.photoURL.trim();
+      }
+      
+      console.log(`firebaseAuth.updateUserProfile - Clean data to update:`, cleanData);
+      
       const userRef = doc(firestore, "users", uid);
-      await updateDoc(userRef, { ...data });
-      console.log(`Updated user ${uid} profile:`, data);
+      await updateDoc(userRef, cleanData);
+      console.log(`firebaseAuth.updateUserProfile - Successfully updated user ${uid}`);
     } catch (error) {
-      console.error(`Error updating user ${uid} profile:`, error);
+      console.error(`firebaseAuth.updateUserProfile - Error updating user ${uid} profile:`, error);
       throw error;
     }
   },

@@ -23,9 +23,7 @@ const About = () => {
         <MessageCarousel messages={ecoCityMessages} />
         
         <TeamSection />
-        
-        <MapDataSection />
-        <TimelineSection />
+
         <ContactSection />
       </div>
     </div>

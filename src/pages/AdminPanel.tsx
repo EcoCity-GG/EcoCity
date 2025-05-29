@@ -1,12 +1,20 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Users, Shield, UserCheck, UserX, UserPlus, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Users, Shield, UserCheck, UserX, UserPlus, RefreshCw, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Form,
   FormControl,
@@ -15,11 +23,22 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { userApi } from '@/services/api';
-import { User } from '@/contexts/AuthContext';
+import { userService } from '@/services/userService';
+import { User } from '@/types/user';
 
 // Esquema de validação para o formulário de criação de usuário
 const createUserSchema = z.object({
@@ -32,12 +51,11 @@ const createUserSchema = z.object({
 type CreateUserFormValues = z.infer<typeof createUserSchema>;
 
 const AdminPanel = () => {
-  const { user, getAllUsers, updateUserAdminStatus, createUserByAdmin } = useAuth();
+  const { user, updateUserAdminStatus, createUserByAdmin } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showUserForm, setShowUserForm] = useState(false);
-  // Add a state variable to trigger user list refresh
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const form = useForm<CreateUserFormValues>({
@@ -50,30 +68,20 @@ const AdminPanel = () => {
     }
   });
 
-  // Fetch users directly from API instead of relying on context
+  // Fetch users from userService
   const fetchUsers = async () => {
     if (!user?.isAdmin) return;
     
     setIsLoading(true);
     try {
-      console.log("AdminPanel: Fetching users from API");
-      const response = await userApi.getAllUsers();
-      
-      if (response.success && response.data) {
-        console.log("AdminPanel: Users fetched successfully:", response.data);
-        setUsers(response.data);
-      } else {
-        console.error("AdminPanel: Failed to fetch users from API");
-        // Fallback to context method
-        const contextUsers = getAllUsers();
-        console.log("AdminPanel: Fallback users from context:", contextUsers);
-        setUsers(contextUsers);
-      }
+      console.log("AdminPanel: Fetching users from userService");
+      const fetchedUsers = await userService.getAllUsers();
+      console.log("AdminPanel: Users fetched successfully:", fetchedUsers);
+      setUsers(fetchedUsers);
     } catch (error) {
       console.error("AdminPanel: Error fetching users:", error);
-      // Fallback to context method
-      const contextUsers = getAllUsers();
-      setUsers(contextUsers);
+      toast.error('Erro ao carregar usuários');
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }
@@ -92,10 +100,9 @@ const AdminPanel = () => {
       navigate('/map');
     } else {
       console.log("User is admin, loading user list");
-      // Load user list
       fetchUsers();
     }
-  }, [user, navigate, refreshTrigger]); // Add refreshTrigger to the dependency array
+  }, [user, navigate, refreshTrigger]);
 
   // Early return with loading state while checking user and admin status
   if (isLoading && !users.length) {
@@ -127,6 +134,31 @@ const AdminPanel = () => {
       }
     } catch (error) {
       toast.error('Erro ao atualizar status do usuário');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (userId === user.id) {
+      toast.error('Você não pode excluir sua própria conta');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log(`AdminPanel: Attempting to delete user ${userId}`);
+      const success = await userService.deleteUser(userId);
+      
+      if (success) {
+        toast.success('Usuário excluído com sucesso!');
+        setRefreshTrigger(prev => prev + 1);
+      } else {
+        toast.error('Falha ao excluir usuário');
+      }
+    } catch (error) {
+      toast.error('Erro ao excluir usuário');
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -167,6 +199,15 @@ const AdminPanel = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR');
+    } catch {
+      return 'N/A';
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col pt-20">
       <div className="container px-4 py-8">
@@ -191,7 +232,7 @@ const AdminPanel = () => {
             <div className="flex items-center justify-between p-6 border-b">
               <div className="flex items-center gap-3">
                 <Users className="h-5 w-5 text-eco-green" />
-                <h2 className="text-xl font-semibold">Usuários Cadastrados</h2>
+                <h2 className="text-xl font-semibold">Usuários Cadastrados ({users.length})</h2>
               </div>
               
               <div className="flex items-center gap-2">
@@ -303,24 +344,25 @@ const AdminPanel = () => {
             
             <div className="p-6">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="px-4 py-3 text-left">ID</th>
-                      <th className="px-4 py-3 text-left">Nome</th>
-                      <th className="px-4 py-3 text-left">Email</th>
-                      <th className="px-4 py-3 text-left">Tipo</th>
-                      <th className="px-4 py-3 text-left">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map(user => (
-                      <tr key={user.id} className="border-t">
-                        <td className="px-4 py-3">{user.id}</td>
-                        <td className="px-4 py-3">{user.name}</td>
-                        <td className="px-4 py-3">{user.email}</td>
-                        <td className="px-4 py-3">
-                          {user.isAdmin ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Bio</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Data de Criação</TableHead>
+                      <TableHead>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map(userItem => (
+                      <TableRow key={userItem.id}>
+                        <TableCell className="font-medium">{userItem.name}</TableCell>
+                        <TableCell>{userItem.email}</TableCell>
+                        <TableCell className="max-w-32 truncate">{userItem.bio || 'Sem bio'}</TableCell>
+                        <TableCell>
+                          {userItem.isAdmin || userItem.role === 'admin' ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-eco-green text-white">
                               Admin
                             </span>
@@ -329,36 +371,70 @@ const AdminPanel = () => {
                               Usuário
                             </span>
                           )}
-                        </td>
-                        <td className="px-4 py-3">
-                          {user.isAdmin ? (
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              disabled={isLoading}
-                              onClick={() => handleToggleAdmin(user.id, false)}
-                              className="text-xs"
-                            >
-                              <UserX className="h-3 w-3 mr-1" />
-                              Remover Admin
-                            </Button>
-                          ) : (
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              disabled={isLoading}
-                              onClick={() => handleToggleAdmin(user.id, true)}
-                              className="text-xs"
-                            >
-                              <UserCheck className="h-3 w-3 mr-1" />
-                              Tornar Admin
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
+                        </TableCell>
+                        <TableCell>{formatDate(userItem.createdAt || '')}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {userItem.isAdmin || userItem.role === 'admin' ? (
+                              <Button 
+                                size="sm" 
+                                variant="destructive"
+                                disabled={isLoading}
+                                onClick={() => handleToggleAdmin(userItem.id, false)}
+                                className="text-xs"
+                              >
+                                <UserX className="h-3 w-3 mr-1" />
+                                Remover Admin
+                              </Button>
+                            ) : (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                disabled={isLoading}
+                                onClick={() => handleToggleAdmin(userItem.id, true)}
+                                className="text-xs"
+                              >
+                                <UserCheck className="h-3 w-3 mr-1" />
+                                Tornar Admin
+                              </Button>
+                            )}
+                            
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive"
+                                  disabled={isLoading || userItem.id === user.id}
+                                  className="text-xs"
+                                >
+                                  <Trash2 className="h-3 w-3 mr-1" />
+                                  Excluir
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Tem certeza que deseja excluir o usuário "{userItem.name}"? Esta ação não pode ser desfeita.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteUser(userItem.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
               
               {users.length === 0 && (

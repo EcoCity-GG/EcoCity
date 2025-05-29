@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, User, Edit, Image, Save, X } from 'lucide-react';
@@ -11,12 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from 'sonner';
-import { uploadImageToImgBB } from '@/services/imgBBUploader';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import { ProfileImageEditor } from '@/components/ProfileImageEditor';
 
 const UserProfile = () => {
   const { user, updateUserProfile } = useAuth();
   const navigate = useNavigate();
+  const { uploadImage, uploadProgress, isUploading } = useImageUpload();
   
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState('');
@@ -32,13 +32,30 @@ const UserProfile = () => {
       return;
     }
     
-    setName(user.name);
+    setName(user.name || '');
     setBio(user.bio || '');
   }, [user, navigate]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      // Validate file type before processing
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Tipo de arquivo não suportado. Use apenas JPG, PNG ou WebP');
+        e.target.value = ''; // Clear the input
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        toast.error('A imagem deve ter no máximo 5MB');
+        e.target.value = ''; // Clear the input
+        return;
+      }
+      
       setPhotoFile(file);
       setShowImageEditor(true);
     }
@@ -68,22 +85,44 @@ const UserProfile = () => {
       // Upload photo if changed
       let photoURL = user?.photoURL || '';
       
-      if (photoFile) {
-        const uploadedUrl = await uploadImageToImgBB(photoFile);
+      if (photoFile && user) {
+        console.log('Uploading new profile image...');
+        const uploadedUrl = await uploadImage(photoFile, user.id, user.photoURL);
         if (uploadedUrl) {
           photoURL = uploadedUrl;
+          console.log('Image uploaded successfully:', uploadedUrl);
+        } else {
+          toast.error('Erro ao fazer upload da imagem');
+          setIsSubmitting(false);
+          return;
         }
       }
       
+      // Prepare update data - only include fields that are defined
+      const updateData: { name?: string; bio?: string; photoURL?: string } = {};
+      
+      // Only include name if it's different and not empty
+      if (name && name.trim() !== '' && name !== user?.name) {
+        updateData.name = name.trim();
+      }
+      
+      // Always include bio (can be empty string)
+      updateData.bio = bio;
+      
+      // Only include photoURL if it's different
+      if (photoURL !== user?.photoURL) {
+        updateData.photoURL = photoURL;
+      }
+      
+      console.log('Updating profile with data:', updateData);
+      
       // Update profile
-      const success = await updateUserProfile({
-        name: name !== user?.name ? name : undefined,
-        bio,
-        photoURL: photoURL !== user?.photoURL ? photoURL : undefined
-      });
+      const success = await updateUserProfile(updateData);
       
       if (success) {
         setIsEditing(false);
+        setPhotoFile(null);
+        setPhotoPreview(null);
         toast.success('Perfil atualizado com sucesso!');
       }
     } catch (error) {
@@ -146,13 +185,13 @@ const UserProfile = () => {
                       <AvatarImage src={user.photoURL} alt={user.name} />
                     ) : (
                       <AvatarFallback className="bg-eco-green text-4xl text-white">
-                        {user.name.charAt(0).toUpperCase()}
+                        {(user.name || 'U').charAt(0).toUpperCase()}
                       </AvatarFallback>
                     )}
                   </Avatar>
                   
                   <div className="text-center space-y-1">
-                    <h3 className="font-semibold text-xl">{user.name}</h3>
+                    <h3 className="font-semibold text-xl">{user.name || 'Usuário'}</h3>
                     <p className="text-muted-foreground text-sm">{user.email}</p>
                     {user.isAdmin && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-eco-green text-white">
@@ -199,6 +238,7 @@ const UserProfile = () => {
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           required
+                          placeholder="Digite seu nome"
                         />
                       </div>
                       
@@ -232,13 +272,27 @@ const UserProfile = () => {
                             <Input
                               id="photo"
                               type="file"
-                              accept="image/*"
+                              accept="image/jpeg,image/jpg,image/png,image/webp"
                               onChange={handlePhotoChange}
                               className="cursor-pointer"
+                              disabled={isUploading}
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                              Recomendado: Imagem quadrada JPG ou PNG, máximo 2MB. Você poderá ajustar após selecionar.
+                              Apenas JPG, PNG ou WebP. Máximo 5MB. Você poderá ajustar após selecionar.
                             </p>
+                            {isUploading && (
+                              <div className="mt-2">
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div 
+                                    className="bg-eco-green h-2 rounded-full transition-all duration-300" 
+                                    style={{ width: `${uploadProgress}%` }}
+                                  ></div>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Enviando: {Math.round(uploadProgress)}%
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -250,12 +304,12 @@ const UserProfile = () => {
                         variant="outline"
                         onClick={() => {
                           setIsEditing(false);
-                          setName(user.name);
+                          setName(user.name || '');
                           setBio(user.bio || '');
                           setPhotoFile(null);
                           setPhotoPreview(null);
                         }}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isUploading}
                       >
                         <X className="h-4 w-4 mr-1" />
                         Cancelar
@@ -264,7 +318,7 @@ const UserProfile = () => {
                       <Button
                         type="submit"
                         className="bg-eco-green hover:bg-eco-green-dark"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isUploading}
                       >
                         <Save className="h-4 w-4 mr-1" />
                         {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}

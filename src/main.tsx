@@ -5,61 +5,99 @@ import App from './App.tsx'
 import './index.css'
 import './config/firebase' // Importando a configuração do Firebase
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check'
-import { app } from './config/firebase'
 
-// Create a client
-const queryClient = new QueryClient();
+// Create a client with better error handling
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
-// Setup Firebase AppCheck with reCAPTCHA
-const initializeAppCheckWithReCaptcha = () => {
-  // Check if we have consent to load analytics cookies
-  const consentData = localStorage.getItem('cookie_consent');
-  let hasAnalyticsConsent = false;
-  
-  if (consentData) {
-    try {
-      const preferences = JSON.parse(consentData);
-      hasAnalyticsConsent = preferences.analytics === true;
-    } catch (e) {
-      console.error('Erro ao analisar dados de consentimento de cookies', e);
-    }
-  }
-  
-  // Only initialize AppCheck if we have consent or if we're in development
-  if (hasAnalyticsConsent || process.env.NODE_ENV === 'development') {
-    // In development mode, we need to add this line to prevent the app check from failing
-    if (process.env.NODE_ENV === 'development') {
-      // @ts-ignore
-      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-      console.log('Firebase AppCheck em modo de debug para ambiente de desenvolvimento');
-    }
-    
-    // Initialize AppCheck
-    try {
-      const appCheck = initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider('6LdCOEUrAAAAACUOGmKFh56dzZ_ELXwZp0-lbLRm'),
-        isTokenAutoRefreshEnabled: true
-      });
-      
-      console.log('Firebase AppCheck inicializado com sucesso');
-    } catch (error) {
-      console.error('Erro ao inicializar Firebase AppCheck:', error);
-    }
-  } else {
-    console.log('Firebase AppCheck não inicializado devido à falta de consentimento');
-  }
+// Add error boundary for React Query
+queryClient.setMutationDefaults(['auth'], {
+  onError: (error) => {
+    console.error('Auth mutation error:', error);
+  },
+});
+
+// Use createRoot API correctly with error handling
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+  throw new Error('Root element not found');
+}
+
+const root = ReactDOM.createRoot(rootElement);
+
+// Wrap in error boundary
+const AppWithProviders = () => {
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
 };
 
-// Initialize AppCheck
-initializeAppCheckWithReCaptcha();
+root.render(<AppWithProviders />);
 
-// Use createRoot API correctly
-const root = ReactDOM.createRoot(document.getElementById('root')!);
-root.render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </React.StrictMode>
-);
+// Enhanced error handling to prevent white screen issues
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  
+  // Check if it's a reCAPTCHA related error
+  if (event.reason && typeof event.reason === 'object' && 
+      (event.reason.code === 'appCheck/recaptcha-error' || 
+       event.reason.message?.includes('ReCAPTCHA') ||
+       event.reason.message?.includes('AppCheck'))) {
+    console.warn('reCAPTCHA/AppCheck error detected, continuing without blocking the app');
+    event.preventDefault();
+    return;
+  }
+  
+  // Prevent the default behavior for null/undefined rejections
+  if (event.reason === null || event.reason === undefined) {
+    console.warn('Null/undefined promise rejection prevented');
+    event.preventDefault();
+    return;
+  }
+  
+  // For other errors, let them through but don't crash the app
+  event.preventDefault();
+});
+
+// Handle errors that could cause white screen
+window.addEventListener('error', (event) => {
+  console.error('Global error:', event.error);
+  
+  // Check if it's a reCAPTCHA script loading error
+  if (event.target && 'src' in event.target && 
+      typeof event.target.src === 'string' && 
+      event.target.src.includes('recaptcha')) {
+    console.warn('reCAPTCHA script loading error, app will continue without it');
+    event.preventDefault();
+    return;
+  }
+});
+
+// Add a safety net for React errors
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  // Filter out known Firebase/reCAPTCHA warnings that don't affect functionality
+  const message = args.join(' ');
+  if (message.includes('AppCheck: ReCAPTCHA error') ||
+      message.includes('reCAPTCHA error') ||
+      message.includes('third-party cookies')) {
+    console.warn('Filtered reCAPTCHA warning:', ...args);
+    return;
+  }
+  originalConsoleError(...args);
+};

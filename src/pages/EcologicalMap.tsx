@@ -1,7 +1,6 @@
-
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, MapPin, Plus, ListFilter } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, MapPin, Plus, ListFilter, Maximize } from 'lucide-react';
 import MapaEco from '@/components/EcoMap';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -12,8 +11,20 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const MapaEcologico = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [showRequestForm, setShowRequestForm] = useState(false);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    // Se usuário está no mobile e não está na tela cheia, redireciona
+    if (isMobile) {
+      navigate('/MapaTelaCheia');
+    }
+  }, [isMobile, navigate]);
+
+  const handleFullscreenClick = () => {
+    navigate('/MapaTelaCheia');
+  };
   
   return (
     <div className="min-h-screen flex flex-col pt-20">
@@ -46,6 +57,14 @@ const MapaEcologico = () => {
               Ver Sumário dos Pontos
             </Button>
           </Link>
+
+          <Button 
+            onClick={handleFullscreenClick}
+            className="gap-1 py-2 bg-eco-green hover:bg-eco-green-dark"
+          >
+            <Maximize size={16} />
+            <span>Tela Cheia</span>
+          </Button>
           
           {user?.isAdmin && (
             <Link to="/admin-dashboard">

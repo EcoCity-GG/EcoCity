@@ -177,11 +177,16 @@ const MapSummary = () => {
                       </div>
                     )}
                     
-                    <div className="pt-2">
+                    <div className="pt-2 flex gap-2">
+                      <Link to={`/map-point/${point.id}`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full">
+                          Ver Detalhes
+                        </Button>
+                      </Link>
                       <Link to={`/map?point=${point.id}`}>
-                        <Button variant="outline" size="sm">
+                        <Button size="sm">
                           <MapPin className="h-3.5 w-3.5 mr-1" />
-                          Ver no Mapa
+                          Mapa
                         </Button>
                       </Link>
                     </div>

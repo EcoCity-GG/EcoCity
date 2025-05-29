@@ -14,6 +14,7 @@ import { EventRequests } from '@/components/events/EventRequests';
 import EventMap from '@/components/events/EventMap';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MyEventRequests } from '@/components/events/MyEventRequests';
+import { cn } from '@/lib/utils';
 
 const Events = () => {
   const { t } = useLanguage();
@@ -28,7 +29,7 @@ const Events = () => {
           <div>
             <Link to="/" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground mb-4">
               <ArrowLeft className="h-4 w-4" />
-              <span>{t('back-home')}</span>
+              <span>Voltar ao início</span>
             </Link>
             <h1 className="text-3xl md:text-4xl font-bold text-eco-green-dark">Eventos Ecológicos</h1>
             <p className="text-lg text-muted-foreground mt-2">
@@ -82,7 +83,7 @@ const Events = () => {
           
           <TabsContent value="mapa" className="space-y-4">
             <Card className="p-0 overflow-hidden">
-              <EventMap />
+              <EventMap /> 
             </Card>
           </TabsContent>
           
@@ -131,6 +132,3 @@ const Events = () => {
 };
 
 export default Events;
-
-// Need to add cn import
-import { cn } from '@/lib/utils';

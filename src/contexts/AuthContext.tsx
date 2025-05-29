@@ -1,9 +1,10 @@
-
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { toast } from 'sonner';
 import { firebaseAuth } from '@/services/firebaseAuth';
+import { userService } from '@/services/userService';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/services/firebaseConfig';
+import { User } from '@/types/user';
 
 // User types
 export interface User {
@@ -14,6 +15,11 @@ export interface User {
   photoURL: string;
   isAdmin: boolean;
   emailVerified?: boolean;
+  role: 'admin' | 'user';
+  dateOfBirth: string;
+  locale: string;
+  customData: string;
+  createdAt: string;
 }
 
 // Auth context types
@@ -46,7 +52,12 @@ const dummyUsers: (User & { password: string })[] = [
     bio: 'Administrador do sistema EcoCity',
     photoURL: '',
     isAdmin: true,
-    emailVerified: true
+    emailVerified: true,
+    role: 'admin',
+    dateOfBirth: '',
+    locale: 'pt-BR',
+    customData: '',
+    createdAt: new Date().toISOString()
   },
   {
     id: '2',
@@ -56,7 +67,12 @@ const dummyUsers: (User & { password: string })[] = [
     bio: 'Usuário comum do EcoCity',
     photoURL: '',
     isAdmin: false,
-    emailVerified: true
+    emailVerified: true,
+    role: 'user',
+    dateOfBirth: '',
+    locale: 'pt-BR',
+    customData: '',
+    createdAt: new Date().toISOString()
   }
 ];
 
@@ -71,11 +87,11 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       try {
         // Manter os dados de usuário dummy apenas para fallback
         setUsers(dummyUsers);
-        console.log("Dados de usuário carregados para fallback local");
+        console.log("AuthProvider - Dados de usuário carregados para fallback local");
         
         // Set up Firebase Auth listener
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-          console.log("Auth state changed:", firebaseUser ? `User ${firebaseUser.uid}` : "No user");
+          console.log("AuthProvider - Auth state changed:", firebaseUser ? `User ${firebaseUser.uid}` : "No user");
           
           if (firebaseUser) {
             // User is logged in
@@ -83,7 +99,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
             if (appUser) {
               setUser(appUser);
               localStorage.setItem('currentUser', JSON.stringify(appUser));
-              console.log("User auth state updated with emailVerified:", appUser.emailVerified);
+              console.log("AuthProvider - User auth state updated with emailVerified:", appUser.emailVerified);
             }
           } else {
             // Check if a user is stored locally
@@ -99,7 +115,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
         
         return unsubscribe;
       } catch (error) {
-        console.error("Error loading users:", error);
+        console.error("AuthProvider - Error loading users:", error);
         
         // Fallback to local storage if Firebase fails
         const storedUser = localStorage.getItem('currentUser');
@@ -122,13 +138,13 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     try {
       // Try Firebase login first
       try {
-        console.log("Attempting login with Firebase...");
+        console.log("AuthProvider - Attempting login with Firebase...");
         const { user: firebaseUser } = await firebaseAuth.signInWithEmailAndPassword(email, password);
-        console.log("Login successful, checking email verification status");
+        console.log("AuthProvider - Login successful, checking email verification status");
         
         // Explicitly check email verification status
         if (!firebaseUser.emailVerified) {
-          console.log("Email not verified, sending verification email and preventing login");
+          console.log("AuthProvider - Email not verified, sending verification email and preventing login");
           toast.warning('Por favor, verifique seu email antes de fazer login.');
           await firebaseAuth.sendEmailVerification(firebaseUser);
           await firebaseAuth.signOut(); // Sign out since email isn't verified
@@ -136,7 +152,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
           return false;
         }
         
-        console.log("Email verified, proceeding with login");
+        console.log("AuthProvider - Email verified, proceeding with login");
         const currentUser = await firebaseAuth.convertToContextUser(firebaseUser);
         
         if (currentUser) {
@@ -146,8 +162,8 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
           return true;
         }
       } catch (firebaseError: any) {
-        console.error("Firebase login failed:", firebaseError);
-        console.error("Error code:", firebaseError.code);
+        console.error("AuthProvider - Firebase login failed:", firebaseError);
+        console.error("AuthProvider - Error code:", firebaseError.code);
         
         // Handle specific Firebase auth errors
         if (firebaseError.code === 'auth/user-not-found') {
@@ -167,7 +183,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       return loginWithLocalData(email, password);
     } catch (error) {
       toast.error('Erro ao fazer login');
-      console.error('Login error:', error);
+      console.error('AuthProvider - Login error:', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -179,9 +195,9 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     setIsLoading(true);
     
     try {
-      console.log("Attempting login with Google...");
+      console.log("AuthProvider - Attempting login with Google...");
       const { user: firebaseUser } = await firebaseAuth.signInWithGoogle();
-      console.log("Google login successful for:", firebaseUser.email);
+      console.log("AuthProvider - Google login successful for:", firebaseUser.email);
       
       // Google-authenticated users are already email verified
       const currentUser = await firebaseAuth.convertToContextUser(firebaseUser);
@@ -195,11 +211,11 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       
       return false;
     } catch (error: any) {
-      console.error('Google login error:', error);
+      console.error('AuthProvider - Google login error:', error);
       
       // Don't show error for user-initiated cancellations
       if (error.code === 'auth/popup-closed-by-user') {
-        console.log("User closed the Google login popup");
+        console.log("AuthProvider - User closed the Google login popup");
       } else if (error.code === 'auth/popup-blocked') {
         toast.error('Pop-up bloqueado. Permita pop-ups para continuar.');
       } else {
@@ -234,12 +250,12 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   // Send password reset email with improved error handling
   const sendPasswordReset = async (email: string): Promise<boolean> => {
     try {
-      console.log("Sending password reset email to:", email);
+      console.log("AuthProvider - Sending password reset email to:", email);
       await firebaseAuth.sendPasswordResetEmail(email);
       toast.success('Email de recuperação enviado com sucesso!');
       return true;
     } catch (error: any) {
-      console.error('Error sending password reset:', error);
+      console.error('AuthProvider - Error sending password reset:', error);
       
       if (error.code === 'auth/user-not-found') {
         toast.error('Nenhum usuário encontrado com este email');
@@ -259,12 +275,12 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     }
     
     try {
-      console.log("Sending verification email to:", auth.currentUser.email);
+      console.log("AuthProvider - Sending verification email to:", auth.currentUser.email);
       await firebaseAuth.sendEmailVerification(auth.currentUser);
       toast.success('Email de verificação enviado com sucesso!');
       return true;
     } catch (error: any) {
-      console.error('Error sending verification email:', error);
+      console.error('AuthProvider - Error sending verification email:', error);
       
       if (error.code === 'auth/too-many-requests') {
         toast.error('Muitos pedidos. Tente novamente mais tarde.');
@@ -279,23 +295,23 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   // Registration function - Fixed to ensure user is created properly
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-    console.log("Starting registration process for:", name, email);
+    console.log("AuthProvider - Starting registration process for:", name, email);
     
     try {
       // Try Firebase registration
       try {
-        console.log("Attempting registration with Firebase...");
+        console.log("AuthProvider - Attempting registration with Firebase...");
         
         // 1. Create user in Firebase Auth and Firestore
         const { user: firebaseUser } = await firebaseAuth.createUserWithEmailAndPassword(email, password, name);
-        console.log("User created in Firebase with UID:", firebaseUser.uid);
+        console.log("AuthProvider - User created in Firebase with UID:", firebaseUser.uid);
         
         // 2. Wait a moment for Firestore write to complete (important!)
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // 3. Fetch the user data to verify it was created properly
         const newUser = await firebaseAuth.convertToContextUser(firebaseUser);
-        console.log("User data from Firestore:", newUser);
+        console.log("AuthProvider - User data from Firestore:", newUser);
         
         // 4. Show toast about email verification
         toast.success('Registro realizado com sucesso! Verifique seu email para completar o cadastro.');
@@ -305,9 +321,9 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
         
         return true;
       } catch (firebaseError: any) {
-        console.error("Firebase registration failed:", firebaseError);
-        console.error("Error code:", firebaseError.code);
-        console.error("Error message:", firebaseError.message);
+        console.error("AuthProvider - Firebase registration failed:", firebaseError);
+        console.error("AuthProvider - Error code:", firebaseError.code);
+        console.error("AuthProvider - Error message:", firebaseError.message);
         
         // Handle specific Firebase error codes
         if (firebaseError.code === 'auth/email-already-in-use') {
@@ -319,7 +335,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
         return registerLocally(name, email, password);
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('AuthProvider - Registration error:', error);
       
       if (error instanceof Error) {
         toast.error(error.message);
@@ -349,7 +365,12 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       bio: '',
       photoURL: '',
       isAdmin: false,
-      emailVerified: true
+      emailVerified: true,
+      role: 'user' as const,
+      dateOfBirth: '',
+      locale: 'pt-BR',
+      customData: '',
+      createdAt: new Date().toISOString()
     };
     
     const updatedUsers = [...users, newUser];
@@ -370,12 +391,12 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       // Try Firebase logout first
       try {
         await firebaseAuth.signOut();
-        console.log("Logged out from Firebase");
+        console.log("AuthProvider - Logged out from Firebase");
       } catch (firebaseError) {
-        console.log("Firebase logout failed", firebaseError);
+        console.log("AuthProvider - Firebase logout failed", firebaseError);
       }
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error('AuthProvider - Error logging out:', error);
     }
     
     // Clear local data
@@ -384,48 +405,40 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     toast.info('Você saiu do sistema');
   };
 
-  // Function to get all users (admin only)
+  // Function to get all users using userService
   const getAllUsers = useCallback((): User[] => {
     if (!user?.isAdmin) return [];
     
-    // Use Firebase Auth if available
-    const fetchFirebaseUsers = async () => {
-      try {
-        return await firebaseAuth.getAllUsers();
-      } catch (error) {
-        console.error('Error fetching Firebase users:', error);
-        return null;
-      }
-    };
-    
-    // Use local users as fallback
+    // Return local users as fallback since this is synchronous
     return users.map(({ password, ...userWithoutPassword }) => userWithoutPassword);
   }, [users, user?.isAdmin]);
 
-  // Function to update a user's admin status
+  // Function to update a user's admin status using userService
   const updateUserAdminStatus = async (userId: string, isAdmin: boolean): Promise<boolean> => {
     if (!user?.isAdmin) {
-      toast.error('You do not have permission to perform this action');
+      toast.error('Você não tem permissão para realizar esta ação');
       return false;
     }
     
     try {
+      console.log(`AuthProvider.updateUserAdminStatus - Updating user ${userId} admin status to ${isAdmin}`);
+      
       // Try to update in Firebase first
       try {
-        console.log(`Updating user ${userId} admin status to ${isAdmin} in Firebase...`);
-        await firebaseAuth.updateUserAdmin(userId, isAdmin);
-        
-        // Update local data for consistency
-        updateLocalUserAdminStatus(userId, isAdmin);
-        return true;
+        const success = await userService.updateUserAdminStatus(userId, isAdmin);
+        if (success) {
+          // Update local data for consistency
+          updateLocalUserAdminStatus(userId, isAdmin);
+          return true;
+        }
       } catch (firebaseError) {
-        console.log("Firebase update failed, falling back to other methods", firebaseError);
+        console.log("AuthProvider - Firebase update failed, falling back to local methods", firebaseError);
       }
       
       // If Firebase is not available, use local update
       return updateLocalUserAdminStatus(userId, isAdmin);
     } catch (error) {
-      console.error('Error updating user status:', error);
+      console.error('AuthProvider - Error updating user status:', error);
       return false;
     }
   };
@@ -434,7 +447,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   const updateLocalUserAdminStatus = (userId: string, isAdmin: boolean): boolean => {
     const updatedUsers = users.map(u => {
       if (u.id === userId) {
-        return { ...u, isAdmin };
+        return { ...u, isAdmin, role: isAdmin ? 'admin' as const : 'user' as const };
       }
       return u;
     });
@@ -444,7 +457,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     
     // If the modified user is the current user, update their state too
     if (user && user.id === userId) {
-      const updatedUser = { ...user, isAdmin };
+      const updatedUser = { ...user, isAdmin, role: isAdmin ? 'admin' as const : 'user' as const };
       setUser(updatedUser);
       localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     }
@@ -460,7 +473,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     isAdmin: boolean
   ): Promise<boolean> => {
     if (!user?.isAdmin) {
-      toast.error('You do not have permission to perform this action');
+      toast.error('Você não tem permissão para realizar esta ação');
       return false;
     }
     
@@ -469,22 +482,22 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     try {
       // Try to create user in Firebase first
       try {
-        console.log("Creating user in Firebase...");
+        console.log("AuthProvider - Creating user in Firebase...");
         const { user: firebaseUser } = await firebaseAuth.createUserWithEmailAndPassword(email, password, name);
         
         if (isAdmin) {
           await firebaseAuth.updateUserAdmin(firebaseUser.uid, isAdmin);
         }
         
-        toast.success('User created successfully in Firebase!');
+        toast.success('Usuário criado com sucesso!');
         return true;
       } catch (firebaseError) {
-        console.log("Firebase user creation failed, falling back to local", firebaseError);
+        console.log("AuthProvider - Firebase user creation failed, falling back to local", firebaseError);
         return createLocalUserByAdmin(name, email, password, isAdmin);
       }
     } catch (error) {
-      toast.error('Error creating user');
-      console.error('User creation error:', error);
+      toast.error('Erro ao criar usuário');
+      console.error('AuthProvider - User creation error:', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -494,7 +507,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   // Helper for local user creation by admin
   const createLocalUserByAdmin = (name: string, email: string, password: string, isAdmin: boolean): boolean => {
     if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-      toast.error('Email already registered');
+      toast.error('Email já cadastrado');
       return false;
     }
     
@@ -507,17 +520,22 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       bio: '',
       photoURL: '',
       isAdmin,
-      emailVerified: true
+      emailVerified: true,
+      role: isAdmin ? 'admin' as const : 'user' as const,
+      dateOfBirth: '',
+      locale: 'pt-BR',
+      customData: '',
+      createdAt: new Date().toISOString()
     };
     
     const updatedUsers = [...users, newUser];
     setUsers(updatedUsers);
     
-    toast.success('User created successfully (local mode)!');
+    toast.success('Usuário criado com sucesso (modo local)!');
     return true;
   };
 
-  // Function to update user profile information
+  // Function to update user profile information - FIXED VERSION
   const updateUserProfile = async (data: { bio?: string, photoURL?: string, name?: string }): Promise<boolean> => {
     if (!user) {
       toast.error("Você precisa estar logado para atualizar seu perfil");
@@ -527,23 +545,39 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     setIsLoading(true);
     
     try {
+      // Filter out undefined values to prevent Firebase errors
+      const cleanData: { bio?: string, photoURL?: string, name?: string } = {};
+      
+      if (data.name !== undefined && data.name.trim() !== '') {
+        cleanData.name = data.name.trim();
+      }
+      
+      if (data.bio !== undefined) {
+        cleanData.bio = data.bio;
+      }
+      
+      if (data.photoURL !== undefined && data.photoURL.trim() !== '') {
+        cleanData.photoURL = data.photoURL.trim();
+      }
+      
+      console.log(`AuthProvider - Updating user ${user.id} profile with clean data:`, cleanData);
+      
       // Try to update in Firebase first
       try {
-        console.log(`Updating user ${user.id} profile:`, data);
-        await firebaseAuth.updateUserProfile(user.id, data);
+        await firebaseAuth.updateUserProfile(user.id, cleanData);
         
         // Update local user data
-        const updatedUser = { ...user, ...data };
+        const updatedUser = { ...user, ...cleanData };
         setUser(updatedUser);
         localStorage.setItem('currentUser', JSON.stringify(updatedUser));
         
         toast.success("Perfil atualizado com sucesso!");
         return true;
       } catch (firebaseError) {
-        console.log("Firebase update failed, falling back to other methods", firebaseError);
+        console.log("AuthProvider - Firebase update failed, falling back to local methods", firebaseError);
         
         // Update local user data as fallback
-        const updatedUser = { ...user, ...data };
+        const updatedUser = { ...user, ...cleanData };
         setUser(updatedUser);
         localStorage.setItem('currentUser', JSON.stringify(updatedUser));
         
@@ -551,7 +585,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
         return true;
       }
     } catch (error) {
-      console.error("Error updating user profile:", error);
+      console.error("AuthProvider - Error updating user profile:", error);
       toast.error("Erro ao atualizar perfil");
       return false;
     } finally {

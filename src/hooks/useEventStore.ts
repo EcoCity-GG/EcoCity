@@ -36,7 +36,6 @@ export const useEventStore = () => {
     } catch (err) {
       console.error('Error fetching events:', err);
       setError(err instanceof Error ? err : new Error('Unknown error fetching events'));
-      toast.error('Erro ao carregar eventos');
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +65,6 @@ export const useEventStore = () => {
     } catch (err) {
       console.error('Error adding event:', err);
       setError(err instanceof Error ? err : new Error('Unknown error adding event'));
-      toast.error('Erro ao adicionar evento');
       return null;
     } finally {
       setIsLoading(false);
@@ -98,7 +96,6 @@ export const useEventStore = () => {
     } catch (err) {
       console.error('Error updating event:', err);
       setError(err instanceof Error ? err : new Error('Unknown error updating event'));
-      toast.error('Erro ao atualizar evento');
       return null;
     } finally {
       setIsLoading(false);

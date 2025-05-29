@@ -1,12 +1,13 @@
 
 import { EventStatus, EventRequest, CreateEventRequestData } from '@/types/events';
 import { firebaseFirestore } from './firebaseFirestore';
-import { useAuth } from '@/contexts/AuthContext';
 
 // Get all event requests (admin only)
 export const getAllEventRequests = async (): Promise<EventRequest[]> => {
   try {
-    return await firebaseFirestore.eventRequests.getAll();
+    const requests = await firebaseFirestore.eventRequests.getAll();
+    console.log('getAllEventRequests - Fetched requests:', requests);
+    return requests;
   } catch (error) {
     console.error('Error getting all event requests:', error);
     return [];
@@ -44,10 +45,11 @@ export const createEventRequest = async (data: CreateEventRequestData): Promise<
     const requestData: Omit<EventRequest, 'id'> = {
       ...data,
       createdBy: userId,
-      status: EventStatus.PENDING,
+      status: 'pending',
       createdAt: new Date().toISOString()
     };
     
+    console.log('createEventRequest - Creating request:', requestData);
     return await firebaseFirestore.eventRequests.add(requestData);
   } catch (error) {
     console.error('Error creating event request:', error);
@@ -58,6 +60,7 @@ export const createEventRequest = async (data: CreateEventRequestData): Promise<
 // Delete event request
 export const deleteEventRequest = async (id: string): Promise<void> => {
   try {
+    console.log('deleteEventRequest - Deleting request:', id);
     await firebaseFirestore.eventRequests.delete(id);
   } catch (error) {
     console.error('Error deleting event request:', error);
@@ -68,6 +71,8 @@ export const deleteEventRequest = async (id: string): Promise<void> => {
 // Approve event request
 export const approveEventRequest = async (id: string): Promise<boolean> => {
   try {
+    console.log('approveEventRequest - Approving request:', id);
+    
     // 1. Get the request
     const requests = await firebaseFirestore.eventRequests.getAll();
     const request = requests.find(req => req.id === id);
@@ -77,8 +82,11 @@ export const approveEventRequest = async (id: string): Promise<boolean> => {
       return false;
     }
     
+    console.log('approveEventRequest - Found request:', request);
+    
     // 2. Update request status
-    await firebaseFirestore.eventRequests.update(id, { status: EventStatus.APPROVED });
+    await firebaseFirestore.eventRequests.update(id, { status: 'approved' });
+    console.log('approveEventRequest - Updated status to approved');
     
     // 3. Create a new event from the request
     await firebaseFirestore.events.add({
@@ -91,11 +99,10 @@ export const approveEventRequest = async (id: string): Promise<boolean> => {
       lat: 0, // These should be geocoded in a real implementation
       lng: 0,
       createdBy: request.createdBy,
-      status: EventStatus.APPROVED,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: new Date().toISOString()
     });
     
+    console.log('approveEventRequest - Created event from request');
     return true;
   } catch (error) {
     console.error('Error approving event request:', error);
@@ -106,7 +113,9 @@ export const approveEventRequest = async (id: string): Promise<boolean> => {
 // Reject event request
 export const rejectEventRequest = async (id: string): Promise<boolean> => {
   try {
-    await firebaseFirestore.eventRequests.update(id, { status: EventStatus.REJECTED });
+    console.log('rejectEventRequest - Rejecting request:', id);
+    await firebaseFirestore.eventRequests.update(id, { status: 'rejected' });
+    console.log('rejectEventRequest - Updated status to rejected');
     return true;
   } catch (error) {
     console.error('Error rejecting event request:', error);

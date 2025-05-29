@@ -6,8 +6,8 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 10000 // Set to 10 seconds (10000ms)
+const TOAST_LIMIT = 2
+const TOAST_REMOVE_DELAY = 4000 // Reduced to 4 seconds
 
 type ToasterToast = ToastProps & {
   id: string
@@ -91,8 +91,6 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -140,10 +138,33 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
+// Track recent toasts to prevent duplicates
+const recentToasts = new Map<string, number>()
+const DUPLICATE_TIMEOUT = 2000 // 2 seconds
+
 function toast({ ...props }: Toast) {
+  // Create a simple hash for duplicate detection
+  const toastHash = `${props.title || ''}-${props.description || ''}-${props.variant || 'default'}`
+  const now = Date.now()
+  
+  // Check if this exact toast was shown recently
+  if (recentToasts.has(toastHash)) {
+    const lastShown = recentToasts.get(toastHash)!
+    if (now - lastShown < DUPLICATE_TIMEOUT) {
+      console.log('Duplicate toast prevented:', toastHash)
+      return { id: '', dismiss: () => {}, update: () => {} }
+    }
+  }
+  
+  recentToasts.set(toastHash, now)
+  
+  // Clean up old entries
+  setTimeout(() => {
+    recentToasts.delete(toastHash)
+  }, DUPLICATE_TIMEOUT)
+
   const id = genId()
 
-  // Auto-dismiss after the configured delay
   setTimeout(() => {
     dispatch({ type: "DISMISS_TOAST", toastId: id })
   }, TOAST_REMOVE_DELAY)

@@ -1,15 +1,12 @@
 
 export interface MapPoint {
-  id: number;
+  id: number | string;
+  firebaseId?: string; // Firebase document ID
   name: string;
-  type: 'recycling-point' | 'recycling-center' | 'seedling-distribution' | 'plant-sales' | 'lamp-collection';
+  type: string;
   lat: number;
   lng: number;
   description: string;
   impact: string;
-  address?: string;
-}
-
-export interface NewPoint extends Omit<MapPoint, 'id' | 'lat' | 'lng'> {
   address: string;
 }

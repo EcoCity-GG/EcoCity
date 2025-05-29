@@ -1,12 +1,13 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from 'sonner';
 import Index from '@/pages/Index';
 import About from '@/pages/About';
 import MapaEcologico from '@/pages/EcologicalMap';
 import MapSummary from '@/pages/MapSummary';
+import MapPointDetails from '@/pages/MapPointDetails';
 import Events from '@/pages/Events';
+import EventDetails from '@/pages/EventDetails';
 import Blog from '@/pages/Blog';
 import BlogPost from '@/pages/BlogPost';
 import Login from '@/pages/Login';
@@ -47,8 +48,22 @@ function App() {
                       <MapaEcologico />
                     </AuthGuard>
                   } />
-                  <Route path="/map-summary" element={<MapSummary />} />
-                  <Route path="/events" element={<Events />} />
+                  <Route path="/map-summary" element={
+                    <AuthGuard requireVerification={true}>
+                      <MapSummary />
+                    </AuthGuard>
+                  } />
+                  <Route path="/map-point/:id" element={<MapPointDetails />} />
+                  <Route path="/events" element={
+                    <AuthGuard requireVerification={true}>
+                      <Events />
+                    </AuthGuard>
+                  } />
+                  <Route path="/events/:id" element={
+                    <AuthGuard requireVerification={true}>
+                      <EventDetails />
+                    </AuthGuard>
+                  } />
                   <Route path="/blog" element={<Blog />} />
                   <Route path="/blog/:id" element={<BlogPost />} />
                   <Route path="/login" element={<Login />} />
@@ -79,13 +94,11 @@ function App() {
                       <UserProfile />
                     </AuthGuard>
                   } />
-                  {/* Adicionando as rotas para o mapa em tela cheia */}
                   <Route path="/mapatelacheia" element={
                     <AuthGuard requireVerification={true}>
                       <MapaTelaCheia />
                     </AuthGuard>
                   } />
-                  {/* Rota alternativa com primeira letra maiúscula para garantir compatibilidade */}
                   <Route path="/MapaTelaCheia" element={
                     <AuthGuard requireVerification={true}>
                       <MapaTelaCheia />
@@ -99,9 +112,9 @@ function App() {
                 richColors 
                 position="top-right" 
                 closeButton={true}
-                duration={10000} 
+                duration={5000}
+                limit={3}
               />
-              <Toaster />
             </Router>
           </ReCaptchaProvider>
         </LanguageProvider>
