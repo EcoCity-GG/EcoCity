@@ -1,112 +1,106 @@
 
 import React, { useEffect, useRef, useState, forwardRef } from 'react';
+import { useReCaptcha } from '@/contexts/ReCaptchaContext';
 
 interface ReCaptchaProps {
-  siteKey: string;
+  siteKey?: string;
   onChange: (token: string | null) => void;
   action?: string;
+  onError?: (error: string) => void;
 }
 
 interface ReCaptchaRefHandle {
   execute: () => Promise<string | null>;
+  reset: () => void;
 }
 
 export const ReCaptcha = forwardRef<ReCaptchaRefHandle, ReCaptchaProps>(
-  ({ siteKey, onChange, action = 'submit' }, ref) => {
-    const [loaded, setLoaded] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const widgetId = useRef<number | null>(null);
+  ({ onChange, action = 'submit', onError }, ref) => {
+    const { ready, loading, error, execute: contextExecute, resetError } = useReCaptcha();
+    const [lastToken, setLastToken] = useState<string | null>(null);
 
-    // Load reCAPTCHA script
+    // Handle errors from context
     useEffect(() => {
-      // Skip if already loaded
-      if (window.grecaptcha) {
-        console.log('reCAPTCHA já está carregado');
-        setLoaded(true);
-        return;
+      if (error && onError) {
+        onError(error);
       }
-
-      // Create script element
-      const script = document.createElement('script');
-      script.src = `https://www.google.com/recaptcha/enterprise.js?render=${siteKey}`;
-      script.async = true;
-      script.defer = true;
-
-      script.onload = () => {
-        console.log('Script reCAPTCHA carregado');
-        setLoaded(true);
-      };
-
-      script.onerror = (error) => {
-        console.error('Falha ao carregar reCAPTCHA:', error);
-      };
-
-      document.head.appendChild(script);
-
-      return () => {
-        // Remove script on cleanup
-        try {
-          document.head.removeChild(script);
-        } catch (e) {
-          // Script might have been removed by another component
-          console.log('Script não encontrado para remoção');
-        }
-      };
-    }, [siteKey]);
-
-    // Initialize reCAPTCHA when loaded
-    useEffect(() => {
-      if (!loaded || !window.grecaptcha) return;
-
-      try {
-        window.grecaptcha.enterprise.ready(() => {
-          console.log('reCAPTCHA Enterprise está pronto');
-        });
-      } catch (error) {
-        console.error('Erro ao inicializar reCAPTCHA:', error);
-      }
-    }, [loaded]);
+    }, [error, onError]);
 
     // Method to execute reCAPTCHA
-    const execute = async () => {
-      if (!loaded || !window.grecaptcha) {
-        console.error('reCAPTCHA não carregado');
-        return null;
-      }
-
+    const execute = async (): Promise<string | null> => {
       try {
-        console.log(`Executando reCAPTCHA com ação: ${action}`);
-        const token = await window.grecaptcha.enterprise.execute(siteKey, { action });
-        console.log('Token reCAPTCHA obtido:', token.substring(0, 20) + '...');
-        onChange(token);
-        return token;
-      } catch (error) {
-        console.error('Erro ao executar reCAPTCHA:', error);
+        resetError();
+        console.log(`Executando reCAPTCHA v3 com ação: ${action}`);
+        const token = await contextExecute(action);
+        
+        if (token) {
+          setLastToken(token);
+          onChange(token);
+          console.log('Token reCAPTCHA v3 obtido no componente:', token.substring(0, 20) + '...');
+          return token;
+        } else {
+          onChange(null);
+          console.log('Nenhum token reCAPTCHA v3 obtido');
+          return null;
+        }
+      } catch (err) {
+        console.error('Erro ao executar reCAPTCHA v3:', err);
         onChange(null);
+        if (onError) {
+          onError(`Erro ao executar reCAPTCHA v3: ${err}`);
+        }
         return null;
       }
     };
 
-    // Expose the execute method via ref
+    const reset = () => {
+      setLastToken(null);
+      resetError();
+      onChange(null);
+    };
+
+    // Expose methods via ref
     React.useImperativeHandle(
       ref,
       () => ({
-        execute
+        execute,
+        reset
       })
     );
 
     return (
-      <div ref={containerRef} className="g-recaptcha" data-sitekey={siteKey} data-action={action}>
-        {!loaded && <p className="text-xs text-muted-foreground">Carregando reCAPTCHA...</p>}
-        {loaded && <p className="text-xs text-green-500">reCAPTCHA pronto</p>}
+      <div className="recaptcha-container">
+        {loading && (
+          <p className="text-xs text-blue-500">
+            Carregando reCAPTCHA v3...
+          </p>
+        )}
+        {ready && !error && (
+          <p className="text-xs text-green-500">
+            ✓ reCAPTCHA v3 pronto
+          </p>
+        )}
+        {error && (
+          <p className="text-xs text-red-500">
+            ⚠ Erro reCAPTCHA v3: {error}
+          </p>
+        )}
+        {lastToken && (
+          <p className="text-xs text-gray-500">
+            Token obtido: {lastToken.substring(0, 20)}...
+          </p>
+        )}
       </div>
     );
   }
 );
 
-// Hook for easier use of reCAPTCHA
-export const useReCaptcha = (siteKey: string, action: string = 'submit') => {
+ReCaptcha.displayName = 'ReCaptcha';
+
+// Hook para uso mais fácil do reCAPTCHA
+export const useReCaptchaComponent = (action: string = 'submit') => {
   const [token, setToken] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const captchaRef = useRef<ReCaptchaRefHandle>(null);
 
   const execute = async () => {
@@ -118,17 +112,30 @@ export const useReCaptcha = (siteKey: string, action: string = 'submit') => {
     return null;
   };
 
+  const reset = () => {
+    if (captchaRef.current) {
+      captchaRef.current.reset();
+    }
+    setToken(null);
+    setError(null);
+  };
+
   const CaptchaComponent = () => (
     <ReCaptcha
       ref={captchaRef}
-      siteKey={siteKey}
       onChange={setToken}
+      onError={setError}
       action={action}
     />
   );
 
-  return { token, execute, CaptchaComponent };
+  return { 
+    token, 
+    error, 
+    execute, 
+    reset, 
+    CaptchaComponent 
+  };
 };
 
-// Create a ref version for imperative use
-export const ReCaptchaWithRef = ReCaptcha;
+export default ReCaptcha;

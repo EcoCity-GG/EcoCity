@@ -37,7 +37,7 @@ const EventMap = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-eco-green/5 to-eco-blue/5 z-0 opacity-70 pointer-events-none"></div>
         <div className="absolute inset-0 shadow-inner pointer-events-none"></div>
         
-        <EcoMap hideControls={false} eventMode={true} searchQuery={searchQuery} />
+        <EcoMap hideControls={false} eventMode={true} searchQuery={searchQuery} nonInteractive={false} />
       </div>
     </div>
   );

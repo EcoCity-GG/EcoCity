@@ -53,7 +53,7 @@ export const RequestPointForm = ({ onClose }: { onClose: () => void }) => {
     try {
       await createRequest({
         name,
-        type: type as 'recycling-point' | 'recycling-center' | 'seedling-distribution' | 'plant-sales' | 'lamp-collection',
+        type: type as 'recycling-point' | 'recycling-center' | 'seedling-distribution' | 'plant-sales' | 'lamp-collection' | 'oil-collection' | 'medicine-collection' | 'electronics-donation',
         description,
         impact,
         address,
@@ -98,11 +98,14 @@ export const RequestPointForm = ({ onClose }: { onClose: () => void }) => {
                 <SelectValue placeholder="Selecione o tipo de ponto" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recycling-point">Ponto de Coleta de Recicláveis</SelectItem>
-                <SelectItem value="recycling-center">Ponto de Coleta de Lixo Eletrônico</SelectItem>
-                <SelectItem value="seedling-distribution">Ponto de Distribuição de Mudas</SelectItem>
+                <SelectItem value="recycling-point">Ponto de Reciclagem</SelectItem>
+                <SelectItem value="recycling-center">Ponto de Lixo Eletrônico</SelectItem>
+                <SelectItem value="seedling-distribution">Distribuição de Mudas</SelectItem>
                 <SelectItem value="plant-sales">Venda de Mudas</SelectItem>
                 <SelectItem value="lamp-collection">Coleta de Lâmpadas</SelectItem>
+                <SelectItem value="oil-collection">Coleta de Óleo</SelectItem>
+                <SelectItem value="medicine-collection">Coleta de Cartela de Remédio</SelectItem>
+                <SelectItem value="electronics-donation">Doação de Eletrônicos</SelectItem>
               </SelectContent>
             </Select>
           </div>

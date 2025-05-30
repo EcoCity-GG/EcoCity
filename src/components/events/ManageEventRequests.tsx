@@ -16,13 +16,13 @@ export const ManageEventRequests = () => {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
 
-  // Force a refresh when the component mounts to ensure we have the latest data
   useEffect(() => {
     console.log("ManageEventRequests - Component mounted, refreshing requests");
-    refreshRequests();
-  }, [refreshRequests]);
+    if (user?.isAdmin) {
+      refreshRequests();
+    }
+  }, [refreshRequests, user?.isAdmin]);
   
-  // Log the current user and event requests for debugging
   useEffect(() => {
     console.log("ManageEventRequests - Current user:", user);
     console.log("ManageEventRequests - Event requests:", eventRequests);
@@ -34,10 +34,18 @@ export const ManageEventRequests = () => {
       return;
     }
     
+    console.log("Approving request with ID:", id);
     setProcessingId(id);
     try {
-      await approveRequest(id);
-      toast.success("Evento aprovado com sucesso!");
+      const success = await approveRequest(id);
+      if (success) {
+        console.log("Request approved successfully");
+        toast.success("Evento aprovado com sucesso!");
+        await refreshRequests();
+      } else {
+        console.error("Failed to approve request");
+        toast.error("Erro ao aprovar evento");
+      }
     } catch (error) {
       console.error("Error approving event:", error);
       toast.error("Erro ao aprovar evento");
@@ -52,10 +60,18 @@ export const ManageEventRequests = () => {
       return;
     }
     
+    console.log("Rejecting request with ID:", id);
     setProcessingId(id);
     try {
-      await rejectRequest(id);
-      toast.success("Evento rejeitado");
+      const success = await rejectRequest(id);
+      if (success) {
+        console.log("Request rejected successfully");
+        toast.success("Evento rejeitado com sucesso!");
+        await refreshRequests();
+      } else {
+        console.error("Failed to reject request");
+        toast.error("Erro ao rejeitar evento");
+      }
     } catch (error) {
       console.error("Error rejecting event:", error);
       toast.error("Erro ao rejeitar evento");
@@ -89,7 +105,7 @@ export const ManageEventRequests = () => {
             onClick={() => setFilter('all')}
             className={filter === 'all' ? 'bg-eco-green hover:bg-eco-green-dark' : ''}
           >
-            Todas
+            Todas ({eventRequests.length})
           </Button>
           <Button 
             variant={filter === 'pending' ? 'default' : 'outline'} 
@@ -97,7 +113,7 @@ export const ManageEventRequests = () => {
             onClick={() => setFilter('pending')}
             className={filter === 'pending' ? 'bg-amber-500 hover:bg-amber-600' : ''}
           >
-            Pendentes
+            Pendentes ({eventRequests.filter(r => r.status === 'pending').length})
           </Button>
           <Button 
             variant={filter === 'approved' ? 'default' : 'outline'} 
@@ -105,7 +121,7 @@ export const ManageEventRequests = () => {
             onClick={() => setFilter('approved')}
             className={filter === 'approved' ? 'bg-green-600 hover:bg-green-700' : ''}
           >
-            Aprovadas
+            Aprovadas ({eventRequests.filter(r => r.status === 'approved').length})
           </Button>
           <Button 
             variant={filter === 'rejected' ? 'default' : 'outline'} 
@@ -113,7 +129,7 @@ export const ManageEventRequests = () => {
             onClick={() => setFilter('rejected')}
             className={filter === 'rejected' ? 'bg-red-500 hover:bg-red-600' : ''}
           >
-            Rejeitadas
+            Rejeitadas ({eventRequests.filter(r => r.status === 'rejected').length})
           </Button>
         </div>
         
@@ -141,7 +157,13 @@ export const ManageEventRequests = () => {
         <div className="text-center py-12 border rounded-lg">
           <Calendar className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-medium mb-1">Nenhuma solicitação encontrada</h3>
-          <p className="text-muted-foreground">Não há solicitações de eventos {filter !== 'all' && filter === 'pending' ? 'pendentes' : filter === 'approved' ? 'aprovadas' : 'rejeitadas'} no momento.</p>
+          <p className="text-muted-foreground">
+            Não há solicitações de eventos {
+              filter !== 'all' && filter === 'pending' ? 'pendentes' : 
+              filter === 'approved' ? 'aprovadas' : 
+              filter === 'rejected' ? 'rejeitadas' : ''
+            } no momento.
+          </p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -184,7 +206,7 @@ export const ManageEventRequests = () => {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground mb-1">Solicitado por</p>
-                      <p>{request.userId || "Usuário não identificado"}</p>
+                      <p>{request.createdBy || "Usuário não identificado"}</p>
                     </div>
                   </div>
                   

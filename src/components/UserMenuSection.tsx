@@ -55,7 +55,7 @@ export const UserMenuSection = ({
                 )}
               </Avatar>
               <div className="text-sm">
-                <span className="text-muted-foreground">{t('ola')} </span>
+                <span className="text-muted-foreground">Olá, </span>
                 <span className="font-medium text-foreground">{user.name}</span>
                 {user.isAdmin && (
                   <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-eco-green text-white">
@@ -106,7 +106,7 @@ export const UserMenuSection = ({
               className="w-full bg-eco-green hover:bg-eco-green-dark"
             >
               <LogIn className="h-4 w-4 mr-1" />
-              {t('entrar')}
+              Entrar
             </Button>
             <Button
               variant="outline"
@@ -114,7 +114,7 @@ export const UserMenuSection = ({
               className="w-full cursor-pointer"
             >
               <UserPlus className="h-4 w-4 mr-1" />
-              {t('cadastrar')}
+              Cadastrar
             </Button>
           </div>
         )}
@@ -154,7 +154,7 @@ export const UserMenuSection = ({
                   <div className="flex items-center gap-1 flex-wrap">
                     {user.isAdmin && (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-eco-green text-white">
-                        {t('Admin')}
+                        Admin
                       </span>
                     )}
                     {!user.emailVerified && (
@@ -169,18 +169,18 @@ export const UserMenuSection = ({
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => handleNavigate('/profile')}>
                 <Edit className="h-4 w-4 mr-2" />
-                {t('Meu Perfil')}
+                Meu Perfil
               </DropdownMenuItem>
               {user.isAdmin && (
                 <DropdownMenuItem onClick={() => handleNavigate('/admin-dashboard')}>
                   <Shield className="h-4 w-4 mr-2" />
-                  {t('Painel Admin')}
+                  Painel Admin
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-red-500">
                 <LogOut className="h-4 w-4 mr-2" />
-                {t('Sair')}
+                Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -195,7 +195,7 @@ export const UserMenuSection = ({
             type="button"
           >
             <UserPlus className="h-4 w-4 mr-1" />
-            {t('Cadastrar')}
+            Cadastrar
           </Button>
           
           <Button
@@ -205,7 +205,7 @@ export const UserMenuSection = ({
             type="button"
           >
             <LogIn className="h-4 w-4 mr-1" />
-            {t('Entrar')}
+            Entrar
           </Button>
         </>
       )}

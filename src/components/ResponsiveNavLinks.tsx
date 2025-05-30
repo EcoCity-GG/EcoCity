@@ -1,5 +1,5 @@
 
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
@@ -19,15 +19,26 @@ export const ResponsiveNavLinks = ({
   onClick?: () => void 
 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   
+  const handleMapClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isMobile) {
+      navigate('/MapaTelaCheia');
+    } else {
+      navigate('/map');
+    }
+    onClick?.();
+  };
+  
   const navItems = [
-    { name: t('Inicio'), path: '/' },
-    { name: t('Mapa'), path: '/map' },
-    { name: t('Eventos'), path: '/events' },
-    { name: t('Blog'), path: '/blog' },
-    { name: t('Sobre'), path: '/about' },
+    { name: 'Início', path: '/' },
+    { name: 'Mapa', path: '/map', onClick: handleMapClick },
+    { name: 'Eventos', path: '/events' },
+    { name: 'Blog', path: '/blog' },
+    { name: 'Sobre', path: '/about' },
   ];
 
   if (isMobile) {
@@ -35,18 +46,32 @@ export const ResponsiveNavLinks = ({
       <ul className="flex flex-col space-y-1 w-full">
         {navItems.map((item) => (
           <li key={item.name}>
-            <Link
-              to={item.path}
-              className={cn(
-                "block px-4 py-2 rounded-md transition-colors w-full text-left",
-                location.pathname === item.path
-                  ? "bg-eco-green-light/20 text-eco-green-dark font-medium"
-                  : "hover:bg-eco-green-light/10"
-              )}
-              onClick={onClick}
-            >
-              {item.name}
-            </Link>
+            {item.onClick ? (
+              <button
+                onClick={item.onClick}
+                className={cn(
+                  "block px-4 py-2 rounded-md transition-colors w-full text-left",
+                  (location.pathname === item.path || (item.path === '/map' && location.pathname === '/MapaTelaCheia'))
+                    ? "bg-eco-green-light/20 text-eco-green-dark font-medium"
+                    : "hover:bg-eco-green-light/10"
+                )}
+              >
+                {item.name}
+              </button>
+            ) : (
+              <Link
+                to={item.path}
+                className={cn(
+                  "block px-4 py-2 rounded-md transition-colors w-full text-left",
+                  location.pathname === item.path
+                    ? "bg-eco-green-light/20 text-eco-green-dark font-medium"
+                    : "hover:bg-eco-green-light/10"
+                )}
+                onClick={onClick}
+              >
+                {item.name}
+              </Link>
+            )}
           </li>
         ))}
       </ul>
@@ -58,25 +83,47 @@ export const ResponsiveNavLinks = ({
       <NavigationMenuList>
         {navItems.map((item) => (
           <NavigationMenuItem key={item.name}>
-            <Link to={item.path} onClick={onClick}>
-              <NavigationMenuLink
-                className={cn(
-                  navigationMenuTriggerStyle(),
-                  "px-4 py-2 font-medium transition-colors relative group",
-                  location.pathname === item.path 
-                    ? "text-eco-green-dark bg-eco-green-light/20" 
-                    : "text-foreground/80 hover:text-eco-green-dark"
-                )}
-              >
-                {item.name}
-                <span 
+            {item.onClick ? (
+              <button onClick={item.onClick}>
+                <NavigationMenuLink
                   className={cn(
-                    "absolute bottom-0 left-0 w-full h-0.5 bg-eco-green-dark transform scale-x-0 transition-transform origin-left group-hover:scale-x-100",
-                    location.pathname === item.path && "scale-x-100"
+                    navigationMenuTriggerStyle(),
+                    "px-4 py-2 font-medium transition-colors relative group",
+                    (location.pathname === item.path || (item.path === '/map' && location.pathname === '/MapaTelaCheia'))
+                      ? "text-eco-green-dark bg-eco-green-light/20" 
+                      : "text-foreground/80 hover:text-eco-green-dark"
                   )}
-                />
-              </NavigationMenuLink>
-            </Link>
+                >
+                  {item.name}
+                  <span 
+                    className={cn(
+                      "absolute bottom-0 left-0 w-full h-0.5 bg-eco-green-dark transform scale-x-0 transition-transform origin-left group-hover:scale-x-100",
+                      (location.pathname === item.path || (item.path === '/map' && location.pathname === '/MapaTelaCheia')) && "scale-x-100"
+                    )}
+                  />
+                </NavigationMenuLink>
+              </button>
+            ) : (
+              <Link to={item.path} onClick={onClick}>
+                <NavigationMenuLink
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    "px-4 py-2 font-medium transition-colors relative group",
+                    location.pathname === item.path 
+                      ? "text-eco-green-dark bg-eco-green-light/20" 
+                      : "text-foreground/80 hover:text-eco-green-dark"
+                  )}
+                >
+                  {item.name}
+                  <span 
+                    className={cn(
+                      "absolute bottom-0 left-0 w-full h-0.5 bg-eco-green-dark transform scale-x-0 transition-transform origin-left group-hover:scale-x-100",
+                      location.pathname === item.path && "scale-x-100"
+                    )}
+                  />
+                </NavigationMenuLink>
+              </Link>
+            )}
           </NavigationMenuItem>
         ))}
       </NavigationMenuList>

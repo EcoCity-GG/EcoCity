@@ -1,4 +1,3 @@
-
 import { Plus, X, Shield, Maximize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -30,7 +29,7 @@ export const MapControls = ({
 }: MapControlsProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-
+  
   return (
     <div className="absolute top-4 left-4 right-4 z-20 flex flex-col md:flex-row gap-2">
       <MapSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -66,21 +65,13 @@ export const MapControls = ({
       
       {user?.isAdmin && (
         <Button 
-          onClick={() => navigate('/admin')}
+          onClick={() => navigate('/admin-dashboard')}
           className="gap-1 py-2 bg-eco-brown hover:bg-eco-brown/80"
         >
           <Shield size={16} />
           <span>Painel Admin</span>
         </Button>
       )}
-      
-      <Button 
-        onClick={() => navigate('/MapaTelaCheia')}
-        className="gap-1 py-2 bg-eco-green hover:bg-eco-green-dark"
-      >
-        <Maximize size={16} />
-        <span>Tela Cheia</span>
-      </Button>
     </div>
   );
 };
