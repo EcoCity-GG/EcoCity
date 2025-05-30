@@ -41,7 +41,6 @@
 3. **Divulgue**: Compartilhe em redes sociais com #EcoCityInitiative
 
 ---
-# Nome do Meu Projeto
 
 Este é um projeto proprietário. Todos os direitos sobre este código são reservados a EcoCity.
 
