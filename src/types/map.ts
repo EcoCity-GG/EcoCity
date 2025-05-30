@@ -9,4 +9,8 @@ export interface MapPoint {
   description: string;
   impact: string;
   address: string;
+  // Novos campos para horários de funcionamento e contato
+  openingHours?: string;
+  contact?: string;
+  website?: string;
 }

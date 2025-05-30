@@ -307,6 +307,27 @@ export const firebaseFirestore = {
       }, 'adicionar ponto do mapa');
     },
     
+    update: async (firebaseId: string, pointData: Partial<MapPoint>): Promise<void> => {
+      return safeFirestoreOperation(async () => {
+        console.log('firebaseFirestore.mapPoints.update - Updating document ID:', firebaseId);
+        
+        if (!firebaseId) {
+          throw new Error('ID do documento Firebase é obrigatório para atualizar');
+        }
+        
+        if (!auth.currentUser) {
+          throw new Error('Usuário não autenticado para atualizar ponto do mapa');
+        }
+        
+        const pointRef = doc(firestore, "mapPoints", firebaseId);
+        await updateDoc(pointRef, {
+          ...pointData,
+          updatedAt: new Date().toISOString()
+        });
+        console.log('firebaseFirestore.mapPoints.update - Successfully updated');
+      }, `atualizar ponto do mapa ${firebaseId}`);
+    },
+    
     delete: async (firebaseId: string): Promise<void> => {
       return safeFirestoreOperation(async () => {
         console.log('firebaseFirestore.mapPoints.delete - Deleting document ID:', firebaseId);

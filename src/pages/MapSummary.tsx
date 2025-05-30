@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, MapPin, Recycle, TreeDeciduous, Info } from 'lucide-react';
+import { ArrowLeft, MapPin, Recycle, TreeDeciduous, Info, Leaf, Lamp, Droplets, Pill, Smartphone, Clock, Phone, Globe } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,16 @@ const MapSummary = () => {
         return <Recycle className="h-5 w-5 text-eco-blue" />;
       case 'seedling-distribution':
         return <TreeDeciduous className="h-5 w-5 text-eco-brown" />;
+      case 'plant-sales':
+        return <Leaf className="h-5 w-5 text-green-600" />;
+      case 'lamp-collection':
+        return <Lamp className="h-5 w-5 text-yellow-500" />;
+      case 'oil-collection':
+        return <Droplets className="h-5 w-5 text-orange-500" />;
+      case 'medicine-collection':
+        return <Pill className="h-5 w-5 text-red-500" />;
+      case 'electronics-donation':
+        return <Smartphone className="h-5 w-5 text-blue-600" />;
       default:
         return <MapPin className="h-5 w-5 text-eco-green" />;
     }
@@ -46,6 +56,16 @@ const MapSummary = () => {
         return 'border-eco-blue';
       case 'seedling-distribution':
         return 'border-eco-brown';
+      case 'plant-sales':
+        return 'border-green-600';
+      case 'lamp-collection':
+        return 'border-yellow-500';
+      case 'oil-collection':
+        return 'border-orange-500';
+      case 'medicine-collection':
+        return 'border-red-500';
+      case 'electronics-donation':
+        return 'border-blue-600';
       default:
         return 'border-eco-green';
     }
@@ -59,6 +79,16 @@ const MapSummary = () => {
         return 'Centro de Reciclagem';
       case 'seedling-distribution':
         return 'Distribuição de Mudas';
+      case 'plant-sales':
+        return 'Venda de Mudas';
+      case 'lamp-collection':
+        return 'Coleta de Lâmpadas';
+      case 'oil-collection':
+        return 'Coleta de Óleo';
+      case 'medicine-collection':
+        return 'Coleta de Cartela de Remédio';
+      case 'electronics-donation':
+        return 'Doação de Eletrônicos';
       default:
         return 'Ponto Ecológico';
     }
@@ -108,7 +138,7 @@ const MapSummary = () => {
               onClick={() => setActiveFilter('recycling-point')}
             >
               <MapPin className="mr-1 h-4 w-4" />
-              Pontos de Reciclagem
+              Reciclagem
             </Button>
             <Button 
               variant={activeFilter === 'recycling-center' ? 'default' : 'outline'}
@@ -116,7 +146,7 @@ const MapSummary = () => {
               onClick={() => setActiveFilter('recycling-center')}
             >
               <Recycle className="mr-1 h-4 w-4" />
-              Centros de Reciclagem
+              Lixo Eletrônico
             </Button>
             <Button 
               variant={activeFilter === 'seedling-distribution' ? 'default' : 'outline'}
@@ -124,7 +154,47 @@ const MapSummary = () => {
               onClick={() => setActiveFilter('seedling-distribution')}
             >
               <TreeDeciduous className="mr-1 h-4 w-4" />
-              Distribuição de Mudas
+              Mudas
+            </Button>
+            <Button 
+              variant={activeFilter === 'plant-sales' ? 'default' : 'outline'}
+              className={activeFilter === 'plant-sales' ? 'bg-green-600 hover:bg-green-700' : ''}
+              onClick={() => setActiveFilter('plant-sales')}
+            >
+              <Leaf className="mr-1 h-4 w-4" />
+              Venda
+            </Button>
+            <Button 
+              variant={activeFilter === 'lamp-collection' ? 'default' : 'outline'}
+              className={activeFilter === 'lamp-collection' ? 'bg-yellow-500 hover:bg-yellow-600' : ''}
+              onClick={() => setActiveFilter('lamp-collection')}
+            >
+              <Lamp className="mr-1 h-4 w-4" />
+              Lâmpadas
+            </Button>
+            <Button 
+              variant={activeFilter === 'oil-collection' ? 'default' : 'outline'}
+              className={activeFilter === 'oil-collection' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+              onClick={() => setActiveFilter('oil-collection')}
+            >
+              <Droplets className="mr-1 h-4 w-4" />
+              Óleo
+            </Button>
+            <Button 
+              variant={activeFilter === 'medicine-collection' ? 'default' : 'outline'}
+              className={activeFilter === 'medicine-collection' ? 'bg-red-500 hover:bg-red-600' : ''}
+              onClick={() => setActiveFilter('medicine-collection')}
+            >
+              <Pill className="mr-1 h-4 w-4" />
+              Remédios
+            </Button>
+            <Button 
+              variant={activeFilter === 'electronics-donation' ? 'default' : 'outline'}
+              className={activeFilter === 'electronics-donation' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+              onClick={() => setActiveFilter('electronics-donation')}
+            >
+              <Smartphone className="mr-1 h-4 w-4" />
+              Eletrônicos
             </Button>
           </div>
         </div>
@@ -159,12 +229,49 @@ const MapSummary = () => {
                   </div>
                   
                   <div className="space-y-3">
-                    <p>{point.description}</p>
+                    <p className="text-sm">{point.description}</p>
                     
                     {point.address && (
                       <div className="flex items-start gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                         <span className="text-sm text-muted-foreground">{point.address}</span>
+                      </div>
+                    )}
+
+                    {point.openingHours && (
+                      <div className="flex items-start gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Horário de Funcionamento</div>
+                          <span className="text-sm">{point.openingHours}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {point.contact && (
+                      <div className="flex items-start gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contato</div>
+                          <span className="text-sm">{point.contact}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {point.website && (
+                      <div className="flex items-start gap-2">
+                        <Globe className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Website</div>
+                          <a 
+                            href={point.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm text-eco-green hover:text-eco-green-dark underline break-all"
+                          >
+                            {point.website}
+                          </a>
+                        </div>
                       </div>
                     )}
                     

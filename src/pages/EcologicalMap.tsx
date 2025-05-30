@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Plus, ListFilter, Maximize } from 'lucide-react';
+import { ArrowLeft, MapPin, Plus, ListFilter, Maximize, Upload } from 'lucide-react';
 import MapaEco from '@/components/EcoMap';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { RequestPointForm } from '@/components/map/RequestPointForm';
+import { BulkAddPointsForm } from '@/components/map/BulkAddPointsForm';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const MapaEcologico = () => {
@@ -13,6 +14,7 @@ const MapaEcologico = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showRequestForm, setShowRequestForm] = useState(false);
+  const [showBulkAddForm, setShowBulkAddForm] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -67,12 +69,23 @@ const MapaEcologico = () => {
           </Button>
           
           {user?.isAdmin && (
-            <Link to="/admin-dashboard">
-              <Button variant="outline">
-                <MapPin className="mr-2 h-4 w-4" />
-                Gerenciar Solicitações
+            <>
+              <Link to="/admin-dashboard">
+                <Button variant="outline">
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Gerenciar Solicitações
+                </Button>
+              </Link>
+              
+              <Button 
+                onClick={() => setShowBulkAddForm(true)}
+                variant="outline"
+                className="border-eco-green text-eco-green hover:bg-eco-green hover:text-white"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Adicionar Vários Pontos
               </Button>
-            </Link>
+            </>
           )}
         </div>
         
@@ -168,6 +181,22 @@ const MapaEcologico = () => {
       
       {showRequestForm && (
         <RequestPointForm onClose={() => setShowRequestForm(false)} />
+      )}
+      
+      {showBulkAddForm && user?.isAdmin && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">Adicionar Múltiplos Pontos</h3>
+                <Button variant="outline" onClick={() => setShowBulkAddForm(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <BulkAddPointsForm />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
