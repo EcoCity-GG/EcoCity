@@ -5,11 +5,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 export const ContactSection = () => {
   const { t } = useLanguage();
   
-  const involvementPoints = ['submit-points', 'partner-initiatives', 'provide-feedback', 'volunteer-events'];
+  const involvementPoints = ['Solicite Pontos', 'Sugira Eventos Faltantes', 'Relate Bugs', 'Relate Pontos com Erro'];
   const faqQuestions = [
-    { title: 'faq-add-point', answer: 'faq-add-answer' },
-    { title: 'faq-verified', answer: 'faq-verified-answer' },
-    { title: 'faq-updates', answer: 'faq-updates-answer' },
+    { title: 'Contato', answer: '(18) 98826-9379' },
+    { title: 'Email', answer: 'ecocity.gg@gmail.com' },
+    { title: 'Instagram', answer: '@ecocity.gg' },
   ];
 
   return (
@@ -29,11 +29,11 @@ export const ContactSection = () => {
             ))}
           </ul>
           <button className="bg-eco-green text-white font-medium rounded-md px-6 py-3 shadow-sm hover:bg-eco-green-dark transition-colors">
-            {t('contact-us')}
+            {t('Contate-nos')}
           </button>
         </div>
         <div className="bg-eco-green p-8 flex flex-col justify-center">
-          <h3 className="text-xl font-semibold text-white mb-6">{t('faq')}</h3>
+          <h3 className="text-xl font-semibold text-white mb-6">{t('FAQ')}</h3>
           <div className="space-y-4">
             {faqQuestions.map((faq) => (
               <div key={faq.title} className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
