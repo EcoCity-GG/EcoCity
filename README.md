@@ -1,7 +1,7 @@
 # 🌱 EcoCity - Conectando Sustentabilidade e Comunidade
 
 <div align="center">
-      <img src="<img width="1413" height="651" alt="image" src="https://github.com/user-attachments/assets/ed5edc8d-ff21-4824-b7e6-da35ee5251a0" />
+      <img src="https://github.com/user-attachments/assets/ed5edc8d-ff21-4824-b7e6-da35ee5251a0" />
 ">
 </div>
 
