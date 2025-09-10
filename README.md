@@ -16,6 +16,7 @@
 - **🌿 Distribuição/Venda de Mudas**:
   - Locais de doação de mudas nativas
   - Viveiros parceiros para compra de plantas
+  - Catálogo de plantas do Horto Municipal
 
 ### 📅 Eventos Ecológicos
 - Calendário com:
